@@ -32,6 +32,7 @@ export interface Drawing {
   created_by: string
   created_at: string
   current_revision_id: string | null
+  checklist_box_url: string | null
 }
 
 export interface Revision {
@@ -45,6 +46,7 @@ export interface Revision {
   reviewed_by: string | null
   reviewed_at: string | null
   review_comment: string | null
+  review_box_url: string | null
 }
 
 export interface Notification {

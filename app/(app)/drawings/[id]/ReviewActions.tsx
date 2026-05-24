@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { isValidBoxUrl } from '@/lib/validate-box-url'
+import BoxLinkInput from '@/components/BoxLinkInput'
 
 export default function ReviewActions({
   revisionId,
@@ -15,12 +17,23 @@ export default function ReviewActions({
   const router = useRouter()
   const [mode, setMode] = useState<'idle' | 'returning'>('idle')
   const [comment, setComment] = useState('')
+  const [reviewBoxUrl, setReviewBoxUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   async function handleAction(action: 'approve' | 'return') {
     if (action === 'return' && !comment.trim()) {
       setError('Un commentaire est obligatoire pour retourner une révision.')
+      return
+    }
+
+    if (action === 'return' && !reviewBoxUrl.trim()) {
+      setError('Le lien Box du PDF annoté est obligatoire pour retourner une révision.')
+      return
+    }
+
+    if (action === 'return' && !isValidBoxUrl(reviewBoxUrl.trim())) {
+      setError('Le lien Box est invalide. Il doit commencer par https://gehealthcare.box.com/ ou https://app.box.com/')
       return
     }
 
@@ -35,6 +48,7 @@ export default function ReviewActions({
         drawingId,
         action,
         comment: comment.trim() || null,
+        reviewBoxUrl: action === 'return' ? reviewBoxUrl.trim() : null,
       }),
     })
 
@@ -56,7 +70,23 @@ export default function ReviewActions({
       </h2>
 
       {mode === 'returning' ? (
-        <div className="space-y-3">
+        <div className="space-y-4">
+          <div>
+            <label className="form-label">
+              Lien Box — PDF annoté avec commentaires <span className="text-red-500">*</span>
+            </label>
+            <div className="mt-1">
+              <BoxLinkInput
+                id="review_box_url"
+                value={reviewBoxUrl}
+                onChange={setReviewBoxUrl}
+                required
+              />
+            </div>
+            <p className="mt-1 text-xs text-gray-500">
+              Partagez le PDF du dessin avec vos annotations directement dans Box.
+            </p>
+          </div>
           <div>
             <label className="form-label">
               Commentaire de retour <span className="text-red-500">*</span>
@@ -80,7 +110,7 @@ export default function ReviewActions({
               {loading ? 'Envoi…' : 'Confirmer le retour'}
             </button>
             <button
-              onClick={() => { setMode('idle'); setComment(''); setError(null) }}
+              onClick={() => { setMode('idle'); setComment(''); setReviewBoxUrl(''); setError(null) }}
               className="btn-secondary"
               disabled={loading}
             >

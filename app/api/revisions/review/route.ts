@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json()
-  const { revisionId, drawingId, action, comment } = body
+  const { revisionId, drawingId, action, comment, reviewBoxUrl } = body
 
   if (!revisionId || !drawingId || !action) {
     return NextResponse.json({ error: 'Paramètres manquants.' }, { status: 400 })
@@ -35,6 +35,17 @@ export async function POST(request: NextRequest) {
 
   if (action === 'return' && !comment?.trim()) {
     return NextResponse.json({ error: 'Un commentaire est obligatoire pour retourner une révision.' }, { status: 400 })
+  }
+
+  if (action === 'return' && !reviewBoxUrl?.trim()) {
+    return NextResponse.json({ error: 'Un lien Box vers le PDF annoté est obligatoire pour retourner une révision.' }, { status: 400 })
+  }
+
+  if (action === 'return' && reviewBoxUrl) {
+    const { assertValidBoxUrl } = await import('@/lib/validate-box-url')
+    try { assertValidBoxUrl(reviewBoxUrl.trim()) } catch (e: any) {
+      return NextResponse.json({ error: e.message }, { status: 400 })
+    }
   }
 
   // Verify revision is pending
@@ -59,6 +70,7 @@ export async function POST(request: NextRequest) {
       reviewed_by: user.id,
       reviewed_at: now,
       review_comment: action === 'return' ? comment.trim() : null,
+      review_box_url: action === 'return' ? reviewBoxUrl.trim() : null,
     })
     .eq('id', revisionId)
 

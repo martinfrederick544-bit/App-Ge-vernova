@@ -90,8 +90,8 @@ export default async function DrawingPage({
       {/* Header */}
       <div className="card">
         <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-xl font-bold text-gray-900 font-mono">{drawing.drawing_number}</h1>
               {latestRevision && (
                 <span className="text-sm font-medium text-gray-500 bg-gray-100 rounded px-2 py-0.5 font-mono">
@@ -101,26 +101,56 @@ export default async function DrawingPage({
             </div>
             <p className="text-lg text-gray-700 mt-1">{drawing.title}</p>
             <p className="text-sm text-gray-400 mt-1">Projet : {drawing.project?.name}</p>
+            {drawing.checklist_box_url && (
+              <a
+                href={drawing.checklist_box_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 mt-3 text-xs font-medium text-gev-500 hover:underline"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Checklist d&apos;émission initiale
+              </a>
+            )}
           </div>
           <DrawingStatusBadge status={latestRevision?.status ?? null} size="md" />
         </div>
       </div>
 
-      {/* Latest revision returned — highlight comment */}
+      {/* Latest revision returned — highlight comment + annotated PDF */}
       {latestRevision?.status === 'returned' && latestRevision.review_comment && (
         <div className="rounded-lg bg-red-50 border-l-4 border-red-500 p-5">
-          <div className="flex items-center gap-2 mb-2">
-            <svg className="w-5 h-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-            </svg>
-            <p className="font-semibold text-red-800">
-              Révision retournée par {latestRevision.reviewed_by_profile?.full_name ?? 'un ingénieur'}
-            </p>
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <svg className="w-5 h-5 text-red-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                </svg>
+                <p className="font-semibold text-red-800">
+                  Révision retournée par {latestRevision.reviewed_by_profile?.full_name ?? 'un ingénieur'}
+                </p>
+              </div>
+              <p className="text-red-900 mt-1">{latestRevision.review_comment}</p>
+              <p className="text-xs text-red-500 mt-2">
+                {latestRevision.reviewed_at ? formatDate(latestRevision.reviewed_at) : ''}
+              </p>
+            </div>
+            {latestRevision.review_box_url && (
+              <a
+                href={latestRevision.review_box_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 shrink-0 rounded-lg border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                Ouvrir le PDF annoté
+              </a>
+            )}
           </div>
-          <p className="text-red-900 mt-1">{latestRevision.review_comment}</p>
-          <p className="text-xs text-red-500 mt-2">
-            {latestRevision.reviewed_at ? formatDate(latestRevision.reviewed_at) : ''}
-          </p>
         </div>
       )}
 
@@ -180,17 +210,32 @@ export default async function DrawingPage({
                       </div>
                     )}
                   </div>
-                  <a
-                    href={rev.box_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-secondary shrink-0 text-xs"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                    Ouvrir dans Box
-                  </a>
+                  <div className="flex flex-col gap-2 shrink-0">
+                    <a
+                      href={rev.box_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-secondary text-xs"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                      Ouvrir dans Box
+                    </a>
+                    {rev.review_box_url && (
+                      <a
+                        href={rev.review_box_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 transition-colors"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                        PDF annoté
+                      </a>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}

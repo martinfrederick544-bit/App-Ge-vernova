@@ -17,8 +17,8 @@ export default function NewDrawingPage() {
   const [projectId, setProjectId] = useState(defaultProject)
   const [drawingNumber, setDrawingNumber] = useState('')
   const [title, setTitle] = useState('')
-  const [revisionNumber, setRevisionNumber] = useState('A')
   const [boxUrl, setBoxUrl] = useState('')
+  const [checklistBoxUrl, setChecklistBoxUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -43,7 +43,12 @@ export default function NewDrawingPage() {
     setError(null)
 
     if (!isValidBoxUrl(boxUrl)) {
-      setError('Le lien Box est invalide. Il doit commencer par https://gehealthcare.box.com/ ou https://app.box.com/')
+      setError('Le lien Box du dessin est invalide. Il doit commencer par https://gehealthcare.box.com/ ou https://app.box.com/')
+      return
+    }
+
+    if (!isValidBoxUrl(checklistBoxUrl)) {
+      setError('Le lien Box de la checklist est invalide. Il doit commencer par https://gehealthcare.box.com/ ou https://app.box.com/')
       return
     }
 
@@ -52,7 +57,7 @@ export default function NewDrawingPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setError('Non authentifié.'); setLoading(false); return }
 
-    // Create drawing
+    // Create drawing with checklist
     const { data: drawing, error: drawingError } = await supabase
       .from('drawings')
       .insert({
@@ -61,6 +66,7 @@ export default function NewDrawingPage() {
         title: title.trim(),
         created_by: user.id,
         current_revision_id: null,
+        checklist_box_url: checklistBoxUrl.trim(),
       })
       .select()
       .single()
@@ -71,12 +77,12 @@ export default function NewDrawingPage() {
       return
     }
 
-    // Create initial revision
+    // Create initial revision at version "-" (émission initiale)
     const { data: revision, error: revError } = await supabase
       .from('revisions')
       .insert({
         drawing_id: drawing.id,
-        revision_number: revisionNumber.trim(),
+        revision_number: '-',
         box_url: boxUrl.trim(),
         uploaded_by: user.id,
         status: 'pending_review',
@@ -155,26 +161,46 @@ export default function NewDrawingPage() {
             />
           </div>
 
-          {/* Initial revision */}
+          {/* Initial revision — locked to "-" (émission initiale) */}
           <div>
-            <label className="form-label">Révision initiale *</label>
-            <input
-              type="text"
-              value={revisionNumber}
-              onChange={(e) => setRevisionNumber(e.target.value)}
-              className="form-input mt-1 font-mono w-28"
-              placeholder="A"
-              required
-            />
-            <p className="mt-1 text-xs text-gray-500">ex: A, B, C ou 00, 01, 02</p>
+            <label className="form-label">Version</label>
+            <div className="mt-1 flex items-center gap-3">
+              <input
+                type="text"
+                value="—"
+                disabled
+                className="form-input font-mono w-20 bg-gray-50 text-gray-500 cursor-not-allowed"
+              />
+              <p className="text-sm text-gray-500">
+                Émission initiale — la version &ldquo;—&rdquo; est attribuée automatiquement.
+              </p>
+            </div>
           </div>
 
           {/* Box URL */}
           <div>
-            <label className="form-label">Lien Box (PDF) *</label>
+            <label className="form-label">Lien Box — Dessin (PDF) *</label>
             <div className="mt-1">
               <BoxLinkInput value={boxUrl} onChange={setBoxUrl} required />
             </div>
+          </div>
+
+          {/* Checklist PDF */}
+          <div>
+            <label className="form-label">
+              Lien Box — Checklist de vérification (PDF) *
+            </label>
+            <div className="mt-1">
+              <BoxLinkInput
+                id="checklist_box_url"
+                value={checklistBoxUrl}
+                onChange={setChecklistBoxUrl}
+                required
+              />
+            </div>
+            <p className="mt-1 text-xs text-gray-500">
+              Checklist de vérification complétée pour l&apos;émission initiale de ce dessin.
+            </p>
           </div>
 
           {error && (
