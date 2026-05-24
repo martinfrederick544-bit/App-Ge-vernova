@@ -8,7 +8,6 @@ export default function NewProjectForm({ userId }: { userId: string }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -21,7 +20,7 @@ export default function NewProjectForm({ userId }: { userId: string }) {
 
     const { data: project, error: projectError } = await supabase
       .from('projects')
-      .insert({ name, description: description || null, created_by: userId })
+      .insert({ name, description: null, created_by: userId })
       .select()
       .single()
 
@@ -39,7 +38,6 @@ export default function NewProjectForm({ userId }: { userId: string }) {
 
     setOpen(false)
     setName('')
-    setDescription('')
     setLoading(false)
     router.refresh()
   }
@@ -60,24 +58,14 @@ export default function NewProjectForm({ userId }: { userId: string }) {
       <h2 className="text-lg font-semibold text-gray-900 mb-4">Nouveau projet</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="form-label">Nom du projet *</label>
+          <label className="form-label">Numéro de projet *</label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="form-input mt-1"
-            placeholder="ex: Turbine GEV-2024"
+            placeholder="ex: GEV-2024-001"
             required
-          />
-        </div>
-        <div>
-          <label className="form-label">Description</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="form-input mt-1"
-            rows={2}
-            placeholder="Description optionnelle"
           />
         </div>
         {error && <p className="text-sm text-red-600">{error}</p>}
