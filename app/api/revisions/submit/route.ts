@@ -64,17 +64,13 @@ export async function POST(request: NextRequest) {
     metadata: { revision_number: revision.revision_number },
   })
 
-  // Notify engineers in the project
-  const { data: members } = await supabase
-    .from('project_members')
-    .select('user_id, profiles(id, email, role, full_name)')
-    .eq('project_id', drawing.project_id)
+  // Notify ALL engineers (they're not necessarily project_members)
+  const { data: engineers } = await serviceClient
+    .from('profiles')
+    .select('id, email, full_name')
+    .eq('role', 'engineer')
 
-  const engineers = (members ?? [])
-    .map((m: any) => m.profiles)
-    .filter((p: any) => p?.role === 'engineer')
-
-  for (const engineer of engineers) {
+  for (const engineer of (engineers ?? [])) {
     await serviceClient.from('notifications').insert({
       user_id: engineer.id,
       type: 'new_revision',
@@ -84,7 +80,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const engineerEmails = engineers.map((e: any) => e.email).filter(Boolean)
+    const engineerEmails = (engineers ?? []).map((e: any) => e.email).filter(Boolean)
     if (engineerEmails.length > 0) {
       await sendNewRevisionEmail({
         engineerEmails,

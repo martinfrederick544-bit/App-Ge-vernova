@@ -7,7 +7,7 @@ import { isValidBoxUrl } from '@/lib/validate-box-url'
 import BoxLinkInput from '@/components/BoxLinkInput'
 import PdfUpload from '@/components/PdfUpload'
 import Link from 'next/link'
-import type { Project } from '@/types/database'
+import type { Project, WorkPackage } from '@/types/database'
 
 const REVISIONS = ['-', 'A', 'B', 'C', 'D', 'E', 'F', 'G']
 
@@ -18,6 +18,10 @@ export default function EditDrawingPage() {
 
   const [projects, setProjects] = useState<Project[]>([])
   const [projectId, setProjectId] = useState('')
+  const [workPackages, setWorkPackages] = useState<WorkPackage[]>([])
+  const [workPackageId, setWorkPackageId] = useState('')
+  const [newWpName, setNewWpName] = useState('')
+  const [creatingWp, setCreatingWp] = useState(false)
   const [drawingNumber, setDrawingNumber] = useState('')
   const [revisionNumber, setRevisionNumber] = useState('-')
   const [boxUrl, setBoxUrl] = useState('')
@@ -28,12 +32,22 @@ export default function EditDrawingPage() {
   const [loadingData, setLoadingData] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  async function loadWorkPackages(pid: string) {
+    if (!pid) { setWorkPackages([]); return }
+    const { data } = await supabase
+      .from('work_packages')
+      .select('*')
+      .eq('project_id', pid)
+      .order('created_at', { ascending: true })
+    setWorkPackages(data ?? [])
+  }
+
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // Load projects
+      // Load projects (member projects for drafter)
       const { data: memberships } = await supabase
         .from('project_members')
         .select('project_id, projects(*)')
@@ -51,6 +65,9 @@ export default function EditDrawingPage() {
       setProjectId(drawing.project_id)
       setDrawingNumber(drawing.drawing_number)
       setChecklistUrl(drawing.checklist_url ?? null)
+      setWorkPackageId(drawing.work_package_id ?? '')
+
+      await loadWorkPackages(drawing.project_id)
 
       const rev = (drawing as any).current_revision
       if (rev) {
@@ -62,6 +79,32 @@ export default function EditDrawingPage() {
     }
     load()
   }, [id])
+
+  async function handleProjectChange(pid: string) {
+    setProjectId(pid)
+    setWorkPackageId('')
+    await loadWorkPackages(pid)
+  }
+
+  async function handleCreateWp() {
+    if (!newWpName.trim() || !projectId) return
+    setCreatingWp(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setCreatingWp(false); return }
+
+    const { data: wp, error: wpErr } = await supabase
+      .from('work_packages')
+      .insert({ project_id: projectId, name: newWpName.trim(), created_by: user.id })
+      .select()
+      .single()
+
+    if (!wpErr && wp) {
+      setWorkPackages((prev) => [...prev, wp])
+      setWorkPackageId(wp.id)
+      setNewWpName('')
+    }
+    setCreatingWp(false)
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -99,13 +142,14 @@ export default function EditDrawingPage() {
         drawing_number: drawingNumber.trim(),
         title: drawingNumber.trim(),
         project_id: projectId,
+        work_package_id: workPackageId || null,
         checklist_url: newChecklistUrl,
       })
       .eq('id', id)
 
     if (drawingError) { setError("Erreur lors de la mise à jour du dessin."); setLoading(false); return }
 
-    // Update revision via API (needs serviceClient for RLS)
+    // Update revision via API
     if (revisionId) {
       const res = await fetch(`/api/revisions/${revisionId}`, {
         method: 'PATCH',
@@ -142,7 +186,7 @@ export default function EditDrawingPage() {
             <label className="form-label">Projet *</label>
             <select
               value={projectId}
-              onChange={(e) => setProjectId(e.target.value)}
+              onChange={(e) => handleProjectChange(e.target.value)}
               className="form-input mt-1"
               required
             >
@@ -152,6 +196,41 @@ export default function EditDrawingPage() {
               ))}
             </select>
           </div>
+
+          {/* Work package */}
+          {projectId && (
+            <div>
+              <label className="form-label">Work package</label>
+              <select
+                value={workPackageId}
+                onChange={(e) => setWorkPackageId(e.target.value)}
+                className="form-input mt-1"
+              >
+                <option value="">— Aucun —</option>
+                {workPackages.map((wp) => (
+                  <option key={wp.id} value={wp.id}>{wp.name}</option>
+                ))}
+              </select>
+              <div className="mt-2 flex items-center gap-2">
+                <input
+                  type="text"
+                  value={newWpName}
+                  onChange={(e) => setNewWpName(e.target.value)}
+                  className="form-input text-sm py-1.5 flex-1"
+                  placeholder="Ou créer un nouveau WP"
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleCreateWp() } }}
+                />
+                <button
+                  type="button"
+                  onClick={handleCreateWp}
+                  disabled={!newWpName.trim() || creatingWp}
+                  className="btn-secondary py-1.5 text-sm shrink-0"
+                >
+                  {creatingWp ? '…' : 'Créer WP'}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Drawing number */}
           <div>

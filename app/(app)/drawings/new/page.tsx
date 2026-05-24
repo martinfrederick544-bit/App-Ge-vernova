@@ -7,19 +7,41 @@ import { isValidBoxUrl } from '@/lib/validate-box-url'
 import BoxLinkInput from '@/components/BoxLinkInput'
 import PdfUpload from '@/components/PdfUpload'
 import Link from 'next/link'
-import type { Project } from '@/types/database'
+import type { Project, WorkPackage } from '@/types/database'
 
 export default function NewDrawingPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const defaultProject = searchParams.get('project') ?? ''
+  const defaultWp = searchParams.get('wp') ?? ''
 
   const [projects, setProjects] = useState<Project[]>([])
   const [projectId, setProjectId] = useState(defaultProject)
+  const [workPackages, setWorkPackages] = useState<WorkPackage[]>([])
+  const [workPackageId, setWorkPackageId] = useState(defaultWp)
+  const [newWpName, setNewWpName] = useState('')
+  const [creatingWp, setCreatingWp] = useState(false)
   const [drawingNumber, setDrawingNumber] = useState('')
+  const [revisionNumber, setRevisionNumber] = useState('-')
+  const [boxUrl, setBoxUrl] = useState('')
+  const [checklistFile, setChecklistFile] = useState<File | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function loadWorkPackages(pid: string) {
+    if (!pid) { setWorkPackages([]); return }
+    const supabase = createClient()
+    const { data } = await supabase
+      .from('work_packages')
+      .select('*')
+      .eq('project_id', pid)
+      .order('created_at', { ascending: true })
+    setWorkPackages(data ?? [])
+  }
 
   function handleProjectChange(id: string) {
     setProjectId(id)
+    setWorkPackageId('')
     const project = projects.find((p) => p.id === id)
     if (project) {
       const prefix = project.name.split(' — ')[0].trim()
@@ -27,19 +49,16 @@ export default function NewDrawingPage() {
     } else {
       setDrawingNumber('')
     }
+    loadWorkPackages(id)
   }
-  const [revisionNumber, setRevisionNumber] = useState('-')
-  const [boxUrl, setBoxUrl] = useState('')
-  const [checklistFile, setChecklistFile] = useState<File | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    async function loadProjects() {
+    async function init() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
+      // Drafters see only their member projects
       const { data } = await supabase
         .from('project_members')
         .select('project_id, projects(*)')
@@ -47,16 +66,40 @@ export default function NewDrawingPage() {
 
       const list: Project[] = (data ?? []).map((m: any) => m.projects).filter(Boolean)
       setProjects(list)
+
       if (defaultProject) {
         const project = list.find((p) => p.id === defaultProject)
         if (project) {
           const prefix = project.name.split(' — ')[0].trim()
           setDrawingNumber(prefix)
         }
+        await loadWorkPackages(defaultProject)
+        if (defaultWp) setWorkPackageId(defaultWp)
       }
     }
-    loadProjects()
+    init()
   }, [])
+
+  async function handleCreateWp() {
+    if (!newWpName.trim() || !projectId) return
+    setCreatingWp(true)
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setCreatingWp(false); return }
+
+    const { data: wp, error: wpErr } = await supabase
+      .from('work_packages')
+      .insert({ project_id: projectId, name: newWpName.trim(), created_by: user.id })
+      .select()
+      .single()
+
+    if (!wpErr && wp) {
+      setWorkPackages((prev) => [...prev, wp])
+      setWorkPackageId(wp.id)
+      setNewWpName('')
+    }
+    setCreatingWp(false)
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -77,7 +120,7 @@ export default function NewDrawingPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setError('Non authentifié.'); setLoading(false); return }
 
-    // Upload checklist PDF to Supabase Storage
+    // Upload checklist PDF
     const fileName = `${user.id}/${Date.now()}_${checklistFile.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('checklists')
@@ -89,15 +132,14 @@ export default function NewDrawingPage() {
       return
     }
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('checklists')
-      .getPublicUrl(uploadData.path)
+    const { data: { publicUrl } } = supabase.storage.from('checklists').getPublicUrl(uploadData.path)
 
-    // Create drawing with checklist
+    // Create drawing
     const { data: drawing, error: drawingError } = await supabase
       .from('drawings')
       .insert({
         project_id: projectId,
+        work_package_id: workPackageId || null,
         drawing_number: drawingNumber.trim(),
         title: drawingNumber.trim(),
         created_by: user.id,
@@ -113,7 +155,7 @@ export default function NewDrawingPage() {
       return
     }
 
-    // Create initial revision at version "-" (émission initiale)
+    // Create initial revision
     const { data: revision, error: revError } = await supabase
       .from('revisions')
       .insert({
@@ -132,7 +174,6 @@ export default function NewDrawingPage() {
       return
     }
 
-    // Update drawing's current revision
     await supabase
       .from('drawings')
       .update({ current_revision_id: revision.id })
@@ -170,6 +211,44 @@ export default function NewDrawingPage() {
               ))}
             </select>
           </div>
+
+          {/* Work package */}
+          {projectId && (
+            <div>
+              <label className="form-label">Work package *</label>
+              <select
+                value={workPackageId}
+                onChange={(e) => setWorkPackageId(e.target.value)}
+                className="form-input mt-1"
+                required
+              >
+                <option value="">— Sélectionner un work package —</option>
+                {workPackages.map((wp) => (
+                  <option key={wp.id} value={wp.id}>{wp.name}</option>
+                ))}
+              </select>
+
+              {/* Create new WP inline */}
+              <div className="mt-2 flex items-center gap-2">
+                <input
+                  type="text"
+                  value={newWpName}
+                  onChange={(e) => setNewWpName(e.target.value)}
+                  className="form-input text-sm py-1.5 flex-1"
+                  placeholder="Ou créer un nouveau : ex. Structure civile"
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleCreateWp() } }}
+                />
+                <button
+                  type="button"
+                  onClick={handleCreateWp}
+                  disabled={!newWpName.trim() || creatingWp}
+                  className="btn-secondary py-1.5 text-sm shrink-0"
+                >
+                  {creatingWp ? '…' : 'Créer WP'}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Drawing number */}
           <div>
@@ -209,9 +288,7 @@ export default function NewDrawingPage() {
 
           {/* Checklist PDF */}
           <div>
-            <label className="form-label">
-              Checklist de vérification (PDF) *
-            </label>
+            <label className="form-label">Checklist de vérification (PDF) *</label>
             <div className="mt-1">
               <PdfUpload value={checklistFile} onChange={setChecklistFile} />
             </div>

@@ -11,35 +11,52 @@ export default async function ProjectsPage() {
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: memberships } = await supabase
-    .from('project_members')
-    .select('project_id')
-    .eq('user_id', user.id)
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
 
-  const projectIds = (memberships ?? []).map((m) => m.project_id)
+  // Drafters: only their member projects. Engineers & PMs: all projects.
+  let projects: any[] = []
 
-  const { data: projects } = await supabase
-    .from('projects')
-    .select('*')
-    .in('id', projectIds.length > 0 ? projectIds : [''])
-    .eq('archived', false)
-    .order('created_at', { ascending: false })
+  if (profile?.role === 'drafter') {
+    const { data: memberships } = await supabase
+      .from('project_members')
+      .select('project_id, projects(*)')
+      .eq('user_id', user.id)
+    projects = (memberships ?? []).map((m: any) => m.projects).filter(Boolean)
+  } else {
+    const { data } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('archived', false)
+      .order('created_at', { ascending: false })
+    projects = data ?? []
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Mes projets</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Projets</h1>
       </div>
 
-      <NewProjectForm userId={user.id} />
+      {/* Only drafters can create projects */}
+      {profile?.role === 'drafter' && <NewProjectForm userId={user.id} />}
 
       <div className="card">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Projets</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          {profile?.role === 'drafter' ? 'Mes projets' : 'Tous les projets'}
+        </h2>
         {!projects || projects.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">Vous n&apos;êtes membre d&apos;aucun projet.</p>
+          <p className="text-gray-500 text-center py-8">
+            {profile?.role === 'drafter'
+              ? "Vous n'êtes membre d'aucun projet."
+              : 'Aucun projet actif.'}
+          </p>
         ) : (
           <div className="space-y-2">
-            {projects.map((project) => (
+            {projects.map((project: any) => (
               <Link
                 key={project.id}
                 href={`/projects/${project.id}`}

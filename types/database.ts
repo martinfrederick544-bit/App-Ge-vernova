@@ -24,9 +24,18 @@ export interface ProjectMember {
   added_at: string
 }
 
+export interface WorkPackage {
+  id: string
+  project_id: string
+  name: string
+  created_by: string | null
+  created_at: string
+}
+
 export interface Drawing {
   id: string
   project_id: string
+  work_package_id: string | null
   drawing_number: string
   title: string
   created_by: string
@@ -73,6 +82,7 @@ export interface AuditLog {
 export interface DrawingWithDetails extends Drawing {
   current_revision: Revision | null
   project: Pick<Project, 'id' | 'name'>
+  work_package: Pick<WorkPackage, 'id' | 'name'> | null
 }
 
 export interface RevisionWithDetails extends Revision {

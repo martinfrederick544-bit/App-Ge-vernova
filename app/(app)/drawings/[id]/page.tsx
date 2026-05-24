@@ -6,9 +6,12 @@ import ReviewActions from './ReviewActions'
 import CancelReviewButton from './CancelReviewButton'
 import DrafterRevisionActions from './DrafterRevisionActions'
 import NewRevisionForm from './NewRevisionForm'
-import type { Profile, Drawing, Revision, Project } from '@/types/database'
+import type { Profile, Drawing, Revision, Project, WorkPackage } from '@/types/database'
 
-type DrawingWithProject = Drawing & { project: Pick<Project, 'id' | 'name'> | null }
+type DrawingWithProject = Drawing & {
+  project: Pick<Project, 'id' | 'name'> | null
+  work_package: Pick<WorkPackage, 'id' | 'name'> | null
+}
 type RevisionWithProfiles = Revision & {
   uploaded_by_profile: Pick<Profile, 'id' | 'full_name'> | null
   reviewed_by_profile: Pick<Profile, 'id' | 'full_name'> | null
@@ -46,7 +49,7 @@ export default async function DrawingPage({
 
   const { data: drawingData } = await supabase
     .from('drawings')
-    .select(`*, project:projects(id, name)`)
+    .select(`*, project:projects(id, name), work_package:work_packages(id, name)`)
     .eq('id', params.id)
     .single()
 
@@ -84,13 +87,21 @@ export default async function DrawingPage({
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-gray-500 flex-wrap">
         <Link href="/projects" className="hover:text-gray-700">Projets</Link>
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
         <Link href={`/projects/${drawing.project?.id}`} className="hover:text-gray-700">
           {drawing.project?.name}
         </Link>
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        {drawing.work_package && (
+          <>
+            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+            <span className="text-gray-600">{drawing.work_package.name}</span>
+          </>
+        )}
+        <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
         <span className="text-gray-900 font-mono font-medium">{drawing.drawing_number}</span>
@@ -109,7 +120,15 @@ export default async function DrawingPage({
               )}
             </div>
             <p className="text-lg text-gray-700 mt-1">{drawing.title}</p>
-            <p className="text-sm text-gray-400 mt-1">Projet : {drawing.project?.name}</p>
+            <p className="text-sm text-gray-400 mt-1">
+              Projet : {drawing.project?.name}
+              {drawing.work_package && (
+                <span className="ml-2 text-gray-300">·</span>
+              )}
+              {drawing.work_package && (
+                <span className="ml-2 text-gray-400">WP : {drawing.work_package.name}</span>
+              )}
+            </p>
             {drawing.checklist_url && (
               <a
                 href={drawing.checklist_url}
