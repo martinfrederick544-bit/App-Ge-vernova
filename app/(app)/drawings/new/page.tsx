@@ -16,7 +16,6 @@ export default function NewDrawingPage() {
   const [projects, setProjects] = useState<Project[]>([])
   const [projectId, setProjectId] = useState(defaultProject)
   const [drawingNumber, setDrawingNumber] = useState('')
-  const [title, setTitle] = useState('')
   const [boxUrl, setBoxUrl] = useState('')
   const [checklistBoxUrl, setChecklistBoxUrl] = useState('')
   const [loading, setLoading] = useState(false)
@@ -63,7 +62,7 @@ export default function NewDrawingPage() {
       .insert({
         project_id: projectId,
         drawing_number: drawingNumber.trim(),
-        title: title.trim(),
+        title: drawingNumber.trim(),
         created_by: user.id,
         current_revision_id: null,
         checklist_box_url: checklistBoxUrl.trim(),
@@ -143,20 +142,7 @@ export default function NewDrawingPage() {
               value={drawingNumber}
               onChange={(e) => setDrawingNumber(e.target.value)}
               className="form-input mt-1 font-mono"
-              placeholder="ex: GEV-2024-001"
-              required
-            />
-          </div>
-
-          {/* Title */}
-          <div>
-            <label className="form-label">Titre *</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="form-input mt-1"
-              placeholder="ex: Vue de face — Turbine T12"
+              placeholder="ex. 25881000MKB29-216FTB"
               required
             />
           </div>
