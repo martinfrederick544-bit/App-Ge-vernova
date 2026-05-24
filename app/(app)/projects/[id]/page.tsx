@@ -95,7 +95,7 @@ export default async function ProjectPage({
             href={filter.value ? `/projects/${params.id}?status=${filter.value}` : `/projects/${params.id}`}
             className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
               searchParams.status === filter.value || (!searchParams.status && !filter.value)
-                ? 'bg-blue-700 text-white'
+                ? 'bg-gev-500 text-white'
                 : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'
             }`}
           >
@@ -126,7 +126,7 @@ export default async function ProjectPage({
               {filtered.map((drawing) => (
                 <tr key={drawing.id} className="hover:bg-gray-50">
                   <td className="px-3 py-3">
-                    <Link href={`/drawings/${drawing.id}`} className="text-blue-700 hover:underline font-mono text-sm font-medium">
+                    <Link href={`/drawings/${drawing.id}`} className="text-gev-500 hover:underline font-mono text-sm font-medium">
                       {drawing.drawing_number}
                     </Link>
                   </td>

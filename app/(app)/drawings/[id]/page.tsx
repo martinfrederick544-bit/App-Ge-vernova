@@ -148,7 +148,7 @@ export default async function DrawingPage({
             {revisions.map((rev, idx) => (
               <div
                 key={rev.id}
-                className={`rounded-lg border p-4 ${idx === 0 ? 'border-blue-200 bg-blue-50' : 'border-gray-200'}`}
+                className={`rounded-lg border p-4 ${idx === 0 ? 'border-gev-200 bg-gev-50' : 'border-gray-200'}`}
               >
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div>
@@ -157,7 +157,7 @@ export default async function DrawingPage({
                         Révision {rev.revision_number}
                       </span>
                       {idx === 0 && (
-                        <span className="text-xs bg-blue-100 text-blue-700 rounded px-1.5 py-0.5 font-medium">
+                        <span className="text-xs bg-gev-100 text-gev-500 rounded px-1.5 py-0.5 font-medium">
                           Dernière
                         </span>
                       )}

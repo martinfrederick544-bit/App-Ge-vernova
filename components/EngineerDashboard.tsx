@@ -98,7 +98,7 @@ export default function EngineerDashboard({
               {recent.map((rev) => (
                 <tr key={rev.id} className="hover:bg-gray-50">
                   <td className="px-3 py-3">
-                    <Link href={`/drawings/${rev.drawing_id}`} className="text-blue-700 hover:underline font-mono text-sm font-medium">
+                    <Link href={`/drawings/${rev.drawing_id}`} className="text-gev-500 hover:underline font-mono text-sm font-medium">
                       {rev.drawing?.drawing_number}
                     </Link>
                     <p className="text-xs text-gray-400">{rev.drawing?.title}</p>

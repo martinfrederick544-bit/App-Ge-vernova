@@ -87,7 +87,7 @@ export default function DrafterDashboard({
               {drawings.map((drawing) => (
                 <tr key={drawing.id} className="hover:bg-gray-50">
                   <td className="px-3 py-3">
-                    <Link href={`/drawings/${drawing.id}`} className="text-blue-700 hover:underline font-mono text-sm font-medium">
+                    <Link href={`/drawings/${drawing.id}`} className="text-gev-500 hover:underline font-mono text-sm font-medium">
                       {drawing.drawing_number}
                     </Link>
                   </td>

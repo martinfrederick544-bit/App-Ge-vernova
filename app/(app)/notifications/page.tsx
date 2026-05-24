@@ -61,7 +61,7 @@ export default async function NotificationsPage() {
           {notifications.map((notif) => (
             <div
               key={notif.id}
-              className={`flex items-start gap-3 px-4 py-4 ${notif.read ? '' : 'bg-blue-50'}`}
+              className={`flex items-start gap-3 px-4 py-4 ${notif.read ? '' : 'bg-gev-50'}`}
             >
               <span className="text-xl shrink-0 mt-0.5">
                 {TYPE_ICONS[notif.type] ?? '🔔'}
@@ -73,7 +73,7 @@ export default async function NotificationsPage() {
                 {notif.drawing_id && (
                   <Link
                     href={`/drawings/${notif.drawing_id}`}
-                    className="text-xs text-blue-600 hover:underline mt-0.5 inline-block"
+                    className="text-xs text-gev-500 hover:underline mt-0.5 inline-block"
                   >
                     Voir le dessin →
                   </Link>
@@ -82,7 +82,7 @@ export default async function NotificationsPage() {
               <div className="shrink-0 text-right">
                 <p className="text-xs text-gray-400">{timeAgo(notif.created_at)}</p>
                 {!notif.read && (
-                  <span className="inline-block w-2 h-2 rounded-full bg-blue-500 mt-1" />
+                  <span className="inline-block w-2 h-2 rounded-full bg-gev-500 mt-1" />
                 )}
               </div>
             </div>
