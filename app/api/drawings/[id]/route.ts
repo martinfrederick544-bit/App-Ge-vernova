@@ -32,7 +32,13 @@ export async function DELETE(
     return NextResponse.json({ error: 'Vous ne pouvez supprimer que vos propres dessins.' }, { status: 403 })
   }
 
-  // Delete via service client (cascades to revisions, notifications, audit_log)
+  // Break circular FK: drawings.current_revision_id → revisions
+  await serviceClient
+    .from('drawings')
+    .update({ current_revision_id: null })
+    .eq('id', params.id)
+
+  // Delete (cascades to revisions + notifications; audit_log FKs are SET NULL)
   const { error } = await serviceClient
     .from('drawings')
     .delete()

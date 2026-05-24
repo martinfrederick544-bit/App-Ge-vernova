@@ -44,6 +44,19 @@ export default function DrafterRevisionActions({
     router.refresh()
   }
 
+  async function handleRetractAndEdit() {
+    setLoading('retract')
+    setError(null)
+    const res = await fetch('/api/revisions/retract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ revisionId, drawingId }),
+    })
+    const data = await res.json()
+    if (!res.ok) { setError(data.error ?? 'Erreur inconnue.'); setLoading(null); return }
+    router.push(`/drawings/${drawingId}/edit`)
+  }
+
   async function handleDelete() {
     setLoading('delete')
     setError(null)
@@ -81,17 +94,31 @@ export default function DrafterRevisionActions({
       <div className="flex items-center gap-2 justify-end flex-wrap">
         {error && <p className="text-sm text-red-600 w-full text-right">{error}</p>}
 
-        {/* Modifier = retract back to draft */}
+        {/* Modifier (pending) = retract then navigate to edit page */}
         {mode === 'retract' && (
           <button
-            onClick={handleRetract}
+            onClick={handleRetractAndEdit}
             disabled={loading !== null}
             className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
-            {loading === 'retract' ? 'Modification…' : 'Modifier'}
+            {loading === 'retract' ? 'Chargement…' : 'Modifier'}
+          </button>
+        )}
+
+        {/* Modifier in draft mode = go directly to edit page */}
+        {mode === 'submit' && (
+          <button
+            onClick={() => router.push(`/drawings/${drawingId}/edit`)}
+            disabled={loading !== null}
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Modifier
           </button>
         )}
 

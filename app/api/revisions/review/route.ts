@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
   const newStatus = action === 'approve' ? 'approved' : 'returned'
   const now = new Date().toISOString()
 
-  const { error: updateError } = await supabase
+  const { error: updateError } = await serviceClient
     .from('revisions')
     .update({
       status: newStatus,
