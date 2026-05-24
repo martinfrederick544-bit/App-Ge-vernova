@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import DrawingStatusBadge from '@/components/DrawingStatusBadge'
 import ReviewActions from './ReviewActions'
+import CancelReviewButton from './CancelReviewButton'
 import NewRevisionForm from './NewRevisionForm'
 import type { Profile, Drawing, Revision, Project } from '@/types/database'
 
@@ -65,6 +66,10 @@ export default async function DrawingPage({
   const latestRevision = revisions[0] ?? null
   const canReview =
     profile.role === 'engineer' && latestRevision?.status === 'pending_review'
+  const canCancelReview =
+    profile.role === 'engineer' &&
+    latestRevision?.reviewed_by === user.id &&
+    (latestRevision?.status === 'approved' || latestRevision?.status === 'returned')
   const canSubmitNewRevision =
     profile.role === 'drafter' &&
     drawing.created_by === user.id &&
@@ -161,6 +166,16 @@ export default async function DrawingPage({
           drawingId={params.id}
           reviewerId={user.id}
         />
+      )}
+
+      {/* Cancel / modify review — engineer who did the last review */}
+      {canCancelReview && latestRevision && (
+        <div className="flex items-center justify-end">
+          <CancelReviewButton
+            revisionId={latestRevision.id}
+            drawingId={params.id}
+          />
+        </div>
       )}
 
       {/* New revision form for drafter */}
