@@ -16,6 +16,17 @@ export default function NewDrawingPage() {
   const [projects, setProjects] = useState<Project[]>([])
   const [projectId, setProjectId] = useState(defaultProject)
   const [drawingNumber, setDrawingNumber] = useState('')
+
+  function handleProjectChange(id: string) {
+    setProjectId(id)
+    const project = projects.find((p) => p.id === id)
+    if (project) {
+      const prefix = project.name.split(' — ')[0].trim()
+      setDrawingNumber(prefix)
+    } else {
+      setDrawingNumber('')
+    }
+  }
   const [boxUrl, setBoxUrl] = useState('')
   const [checklistBoxUrl, setChecklistBoxUrl] = useState('')
   const [loading, setLoading] = useState(false)
@@ -32,7 +43,15 @@ export default function NewDrawingPage() {
         .select('project_id, projects(*)')
         .eq('user_id', user.id)
 
-      setProjects((data ?? []).map((m: any) => m.projects).filter(Boolean))
+      const list: Project[] = (data ?? []).map((m: any) => m.projects).filter(Boolean)
+      setProjects(list)
+      if (defaultProject) {
+        const project = list.find((p) => p.id === defaultProject)
+        if (project) {
+          const prefix = project.name.split(' — ')[0].trim()
+          setDrawingNumber(prefix)
+        }
+      }
     }
     loadProjects()
   }, [])
@@ -123,7 +142,7 @@ export default function NewDrawingPage() {
             <label className="form-label">Projet *</label>
             <select
               value={projectId}
-              onChange={(e) => setProjectId(e.target.value)}
+              onChange={(e) => handleProjectChange(e.target.value)}
               className="form-input mt-1"
               required
             >
