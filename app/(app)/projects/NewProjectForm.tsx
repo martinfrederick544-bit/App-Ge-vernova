@@ -7,7 +7,8 @@ import { createClient } from '@/lib/supabase/client'
 export default function NewProjectForm({ userId }: { userId: string }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
-  const [name, setName] = useState('')
+  const [number, setNumber] = useState('')
+  const [projectName, setProjectName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -17,10 +18,11 @@ export default function NewProjectForm({ userId }: { userId: string }) {
     setLoading(true)
 
     const supabase = createClient()
+    const combinedName = `${number.trim()} — ${projectName.trim()}`
 
     const { data: project, error: projectError } = await supabase
       .from('projects')
-      .insert({ name, description: null, created_by: userId })
+      .insert({ name: combinedName, description: null, created_by: userId })
       .select()
       .single()
 
@@ -30,14 +32,14 @@ export default function NewProjectForm({ userId }: { userId: string }) {
       return
     }
 
-    // Add creator as member
     await supabase.from('project_members').insert({
       project_id: project.id,
       user_id: userId,
     })
 
     setOpen(false)
-    setName('')
+    setNumber('')
+    setProjectName('')
     setLoading(false)
     router.refresh()
   }
@@ -61,10 +63,21 @@ export default function NewProjectForm({ userId }: { userId: string }) {
           <label className="form-label">Numéro de projet *</label>
           <input
             type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={number}
+            onChange={(e) => setNumber(e.target.value)}
             className="form-input mt-1"
-            placeholder="ex: GEV-2024-001"
+            placeholder="ex. 258810"
+            required
+          />
+        </div>
+        <div>
+          <label className="form-label">Nom du projet *</label>
+          <input
+            type="text"
+            value={projectName}
+            onChange={(e) => setProjectName(e.target.value)}
+            className="form-input mt-1"
+            placeholder="ex. Manic 3"
             required
           />
         </div>
@@ -73,7 +86,7 @@ export default function NewProjectForm({ userId }: { userId: string }) {
           <button type="submit" disabled={loading} className="btn-primary">
             {loading ? 'Création…' : 'Créer'}
           </button>
-          <button type="button" onClick={() => setOpen(false)} className="btn-secondary">
+          <button type="button" onClick={() => { setOpen(false); setNumber(''); setProjectName('') }} className="btn-secondary">
             Annuler
           </button>
         </div>
