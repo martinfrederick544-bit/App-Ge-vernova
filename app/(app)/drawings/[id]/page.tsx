@@ -106,9 +106,9 @@ export default async function DrawingPage({
             </div>
             <p className="text-lg text-gray-700 mt-1">{drawing.title}</p>
             <p className="text-sm text-gray-400 mt-1">Projet : {drawing.project?.name}</p>
-            {drawing.checklist_box_url && (
+            {drawing.checklist_url && (
               <a
-                href={drawing.checklist_box_url}
+                href={drawing.checklist_url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 mt-3 text-xs font-medium text-gev-500 hover:underline"

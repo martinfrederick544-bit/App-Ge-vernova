@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { isValidBoxUrl } from '@/lib/validate-box-url'
 import BoxLinkInput from '@/components/BoxLinkInput'
+import PdfUpload from '@/components/PdfUpload'
 import Link from 'next/link'
 import type { Project } from '@/types/database'
 
@@ -28,7 +29,7 @@ export default function NewDrawingPage() {
     }
   }
   const [boxUrl, setBoxUrl] = useState('')
-  const [checklistBoxUrl, setChecklistBoxUrl] = useState('')
+  const [checklistFile, setChecklistFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -65,8 +66,8 @@ export default function NewDrawingPage() {
       return
     }
 
-    if (!isValidBoxUrl(checklistBoxUrl)) {
-      setError('Le lien Box de la checklist est invalide. Il doit commencer par https://gehealthcare.box.com/ ou https://app.box.com/')
+    if (!checklistFile) {
+      setError('La checklist de vérification (PDF) est obligatoire.')
       return
     }
 
@@ -74,6 +75,22 @@ export default function NewDrawingPage() {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setError('Non authentifié.'); setLoading(false); return }
+
+    // Upload checklist PDF to Supabase Storage
+    const fileName = `${user.id}/${Date.now()}_${checklistFile.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('checklists')
+      .upload(fileName, checklistFile, { contentType: 'application/pdf' })
+
+    if (uploadError || !uploadData) {
+      setError("Erreur lors de l'envoi de la checklist.")
+      setLoading(false)
+      return
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('checklists')
+      .getPublicUrl(uploadData.path)
 
     // Create drawing with checklist
     const { data: drawing, error: drawingError } = await supabase
@@ -84,7 +101,7 @@ export default function NewDrawingPage() {
         title: drawingNumber.trim(),
         created_by: user.id,
         current_revision_id: null,
-        checklist_box_url: checklistBoxUrl.trim(),
+        checklist_url: publicUrl,
       })
       .select()
       .single()
@@ -159,7 +176,7 @@ export default function NewDrawingPage() {
             <input
               type="text"
               value={drawingNumber}
-              onChange={(e) => setDrawingNumber(e.target.value)}
+              onChange={(e) => setDrawingNumber(e.target.value.toUpperCase())}
               className="form-input mt-1 font-mono"
               placeholder="ex. 25881000MKB29-216FTB"
               required
@@ -193,19 +210,11 @@ export default function NewDrawingPage() {
           {/* Checklist PDF */}
           <div>
             <label className="form-label">
-              Lien Box — Checklist de vérification (PDF) *
+              Checklist de vérification (PDF) *
             </label>
             <div className="mt-1">
-              <BoxLinkInput
-                id="checklist_box_url"
-                value={checklistBoxUrl}
-                onChange={setChecklistBoxUrl}
-                required
-              />
+              <PdfUpload value={checklistFile} onChange={setChecklistFile} />
             </div>
-            <p className="mt-1 text-xs text-gray-500">
-              Checklist de vérification complétée pour l&apos;émission initiale de ce dessin.
-            </p>
           </div>
 
           {error && (
