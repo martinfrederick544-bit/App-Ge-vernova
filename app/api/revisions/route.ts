@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       revision_number: revisionNumber,
       box_url: boxUrl,
       uploaded_by: user.id,
-      status: 'pending_review',
+      status: 'draft',
     })
     .select()
     .single()

@@ -120,7 +120,7 @@ export default function NewDrawingPage() {
         revision_number: '-',
         box_url: boxUrl.trim(),
         uploaded_by: user.id,
-        status: 'pending_review',
+        status: 'draft',
       })
       .select()
       .single()

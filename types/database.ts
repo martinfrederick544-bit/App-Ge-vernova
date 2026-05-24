@@ -1,5 +1,5 @@
 export type UserRole = 'drafter' | 'engineer' | 'project_manager'
-export type RevisionStatus = 'pending_review' | 'approved' | 'returned'
+export type RevisionStatus = 'draft' | 'pending_review' | 'approved' | 'returned'
 
 export interface Profile {
   id: string

@@ -12,9 +12,8 @@ export default function DrafterDashboard({
 }: {
   drawings: DrawingWithDetails[]
 }) {
-  const returned = drawings.filter(
-    (d) => d.current_revision?.status === 'returned'
-  )
+  const drafts = drawings.filter((d) => d.current_revision?.status === 'draft')
+  const returned = drawings.filter((d) => d.current_revision?.status === 'returned')
 
   return (
     <div className="space-y-6">
@@ -27,6 +26,37 @@ export default function DrafterDashboard({
           Nouveau dessin
         </Link>
       </div>
+
+      {/* Draft drawings — not yet sent */}
+      {drafts.length > 0 && (
+        <div className="rounded-lg bg-gray-50 border border-gray-200 p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            <h2 className="font-semibold text-gray-700">
+              {drafts.length} brouillon{drafts.length > 1 ? 's' : ''} — non encore envoyé{drafts.length > 1 ? 's' : ''}
+            </h2>
+          </div>
+          <div className="space-y-2">
+            {drafts.map((drawing) => (
+              <Link
+                key={drawing.id}
+                href={`/drawings/${drawing.id}`}
+                className="flex items-center justify-between rounded-md bg-white border border-gray-200 px-4 py-3 hover:bg-gray-50 transition-colors"
+              >
+                <div>
+                  <p className="font-medium text-gray-900">{drawing.drawing_number}</p>
+                  <p className="text-sm text-gray-500">{drawing.project?.name ?? '—'}</p>
+                </div>
+                <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Returned drawings — priority alert */}
       {returned.length > 0 && (

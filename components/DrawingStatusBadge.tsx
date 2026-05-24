@@ -5,6 +5,10 @@ const STATUS_CONFIG: Record<
   RevisionStatus,
   { label: string; classes: string }
 > = {
+  draft: {
+    label: 'Brouillon',
+    classes: 'bg-gray-100 text-gray-600 ring-gray-500/20',
+  },
   pending_review: {
     label: 'En attente',
     classes: 'bg-yellow-50 text-yellow-800 ring-yellow-600/20',

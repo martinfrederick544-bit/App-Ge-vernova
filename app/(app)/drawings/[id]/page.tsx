@@ -4,6 +4,7 @@ import Link from 'next/link'
 import DrawingStatusBadge from '@/components/DrawingStatusBadge'
 import ReviewActions from './ReviewActions'
 import CancelReviewButton from './CancelReviewButton'
+import DrafterRevisionActions from './DrafterRevisionActions'
 import NewRevisionForm from './NewRevisionForm'
 import type { Profile, Drawing, Revision, Project } from '@/types/database'
 
@@ -70,10 +71,13 @@ export default async function DrawingPage({
     profile.role === 'engineer' &&
     latestRevision?.reviewed_by === user.id &&
     (latestRevision?.status === 'approved' || latestRevision?.status === 'returned')
-  const canSubmitNewRevision =
-    profile.role === 'drafter' &&
-    drawing.created_by === user.id &&
-    latestRevision?.status === 'returned'
+  const isOwner = profile.role === 'drafter' && drawing.created_by === user.id
+  const canSubmitDraft = isOwner && latestRevision?.status === 'draft'
+  const canRetract =
+    isOwner &&
+    latestRevision?.status === 'pending_review' &&
+    latestRevision?.reviewed_by === null
+  const canSubmitNewRevision = isOwner && latestRevision?.status === 'returned'
 
   return (
     <div className="max-w-3xl space-y-6">
@@ -157,6 +161,24 @@ export default async function DrawingPage({
             )}
           </div>
         </div>
+      )}
+
+      {/* Drafter: submit draft to engineer */}
+      {canSubmitDraft && latestRevision && (
+        <DrafterRevisionActions
+          revisionId={latestRevision.id}
+          drawingId={params.id}
+          mode="submit"
+        />
+      )}
+
+      {/* Drafter: retract submission */}
+      {canRetract && latestRevision && (
+        <DrafterRevisionActions
+          revisionId={latestRevision.id}
+          drawingId={params.id}
+          mode="retract"
+        />
       )}
 
       {/* Review actions for engineer */}
