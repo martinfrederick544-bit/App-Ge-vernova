@@ -14,7 +14,7 @@ export default function NewRevisionForm({
 }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
-  const [revisionNumber, setRevisionNumber] = useState('')
+  const [revisionNumber, setRevisionNumber] = useState('A')
   const [boxUrl, setBoxUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -75,15 +75,17 @@ export default function NewRevisionForm({
       <h2 className="text-base font-semibold text-gray-900 mb-4">Soumettre une nouvelle révision</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="form-label">Numéro de révision *</label>
-          <input
-            type="text"
+          <label className="form-label">Révision *</label>
+          <select
             value={revisionNumber}
             onChange={(e) => setRevisionNumber(e.target.value)}
             className="form-input mt-1 font-mono w-28"
-            placeholder="B"
             required
-          />
+          >
+            {['-', 'A', 'B', 'C', 'D', 'E', 'F', 'G'].map((r) => (
+              <option key={r} value={r}>{r === '-' ? '- (initiale)' : r}</option>
+            ))}
+          </select>
         </div>
         <div>
           <label className="form-label">Lien Box (PDF corrigé) *</label>

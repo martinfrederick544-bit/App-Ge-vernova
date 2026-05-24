@@ -187,17 +187,16 @@ export default function NewDrawingPage() {
           {/* Revision number */}
           <div>
             <label className="form-label">Révision *</label>
-            <input
-              type="text"
+            <select
               value={revisionNumber}
-              onChange={(e) => setRevisionNumber(e.target.value.toUpperCase())}
+              onChange={(e) => setRevisionNumber(e.target.value)}
               className="form-input mt-1 font-mono w-28"
-              placeholder="-"
               required
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              Émission initiale : <code className="bg-gray-100 px-1 rounded">-</code> · Sinon : A, B, C…
-            </p>
+            >
+              {['-', 'A', 'B', 'C', 'D', 'E', 'F', 'G'].map((r) => (
+                <option key={r} value={r}>{r === '-' ? '- (initiale)' : r}</option>
+              ))}
+            </select>
           </div>
 
           {/* Box URL */}
