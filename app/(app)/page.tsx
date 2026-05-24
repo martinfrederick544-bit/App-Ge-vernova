@@ -40,7 +40,7 @@ export default async function DashboardPage() {
       .from('revisions')
       .select(`
         *,
-        drawing:drawings(*, project:projects(id, name)),
+        drawing:drawings!revisions_drawing_id_fkey(*, project:projects(id, name)),
         uploaded_by_profile:profiles!revisions_uploaded_by_fkey(id, full_name)
       `)
       .eq('status', 'pending_review')
@@ -51,7 +51,7 @@ export default async function DashboardPage() {
       .from('revisions')
       .select(`
         *,
-        drawing:drawings(*, project:projects(id, name))
+        drawing:drawings!revisions_drawing_id_fkey(*, project:projects(id, name))
       `)
       .in('status', ['approved', 'returned'])
       .eq('reviewed_by', user.id)

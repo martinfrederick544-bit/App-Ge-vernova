@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
   // Verify revision is pending
   const { data: revision } = await supabase
     .from('revisions')
-    .select('*, drawing:drawings(drawing_number, title, project_id, created_by)')
+    .select('*, drawing:drawings!revisions_drawing_id_fkey(drawing_number, title, project_id, created_by)')
     .eq('id', revisionId)
     .single()
 
