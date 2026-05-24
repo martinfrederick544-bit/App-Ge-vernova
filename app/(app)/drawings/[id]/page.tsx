@@ -4,6 +4,13 @@ import Link from 'next/link'
 import DrawingStatusBadge from '@/components/DrawingStatusBadge'
 import ReviewActions from './ReviewActions'
 import NewRevisionForm from './NewRevisionForm'
+import type { Profile, Drawing, Revision, Project } from '@/types/database'
+
+type DrawingWithProject = Drawing & { project: Pick<Project, 'id' | 'name'> | null }
+type RevisionWithProfiles = Revision & {
+  uploaded_by_profile: Pick<Profile, 'id' | 'full_name'> | null
+  reviewed_by_profile: Pick<Profile, 'id' | 'full_name'> | null
+}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString('fr-FR', {
@@ -27,22 +34,24 @@ export default async function DrawingPage({
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
+  const { data: profileData } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', user.id)
     .single()
-  if (!profile) redirect('/login')
+  if (!profileData) redirect('/login')
+  const profile = profileData as Profile
 
-  const { data: drawing } = await supabase
+  const { data: drawingData } = await supabase
     .from('drawings')
     .select(`*, project:projects(id, name)`)
     .eq('id', params.id)
     .single()
 
-  if (!drawing) notFound()
+  if (!drawingData) notFound()
+  const drawing = drawingData as DrawingWithProject
 
-  const { data: revisions } = await supabase
+  const { data: revisionsData } = await supabase
     .from('revisions')
     .select(`
       *,
@@ -52,7 +61,8 @@ export default async function DrawingPage({
     .eq('drawing_id', params.id)
     .order('uploaded_at', { ascending: false })
 
-  const latestRevision = revisions?.[0] ?? null
+  const revisions = (revisionsData ?? []) as RevisionWithProfiles[]
+  const latestRevision = revisions[0] ?? null
   const canReview =
     profile.role === 'engineer' && latestRevision?.status === 'pending_review'
   const canSubmitNewRevision =
@@ -68,8 +78,8 @@ export default async function DrawingPage({
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
-        <Link href={`/projects/${(drawing.project as any)?.id}`} className="hover:text-gray-700">
-          {(drawing.project as any)?.name}
+        <Link href={`/projects/${drawing.project?.id}`} className="hover:text-gray-700">
+          {drawing.project?.name}
         </Link>
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -90,7 +100,7 @@ export default async function DrawingPage({
               )}
             </div>
             <p className="text-lg text-gray-700 mt-1">{drawing.title}</p>
-            <p className="text-sm text-gray-400 mt-1">Projet : {(drawing.project as any)?.name}</p>
+            <p className="text-sm text-gray-400 mt-1">Projet : {drawing.project?.name}</p>
           </div>
           <DrawingStatusBadge status={latestRevision?.status ?? null} size="md" />
         </div>
@@ -104,7 +114,7 @@ export default async function DrawingPage({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
             </svg>
             <p className="font-semibold text-red-800">
-              Révision retournée par {(latestRevision as any).reviewed_by_profile?.full_name ?? 'un ingénieur'}
+              Révision retournée par {latestRevision.reviewed_by_profile?.full_name ?? 'un ingénieur'}
             </p>
           </div>
           <p className="text-red-900 mt-1">{latestRevision.review_comment}</p>
@@ -154,13 +164,13 @@ export default async function DrawingPage({
                       <DrawingStatusBadge status={rev.status} />
                     </div>
                     <p className="text-sm text-gray-500 mt-1">
-                      Soumis par <span className="font-medium text-gray-700">{(rev as any).uploaded_by_profile?.full_name ?? '—'}</span>
+                      Soumis par <span className="font-medium text-gray-700">{rev.uploaded_by_profile?.full_name ?? '—'}</span>
                       {' · '}
                       {formatDate(rev.uploaded_at)}
                     </p>
                     {rev.reviewed_by && (
                       <p className="text-sm text-gray-500 mt-0.5">
-                        Examiné par <span className="font-medium text-gray-700">{(rev as any).reviewed_by_profile?.full_name ?? '—'}</span>
+                        Examiné par <span className="font-medium text-gray-700">{rev.reviewed_by_profile?.full_name ?? '—'}</span>
                         {rev.reviewed_at && ` · ${formatDate(rev.reviewed_at)}`}
                       </p>
                     )}
