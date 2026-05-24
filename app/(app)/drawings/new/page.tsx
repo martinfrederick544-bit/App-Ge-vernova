@@ -28,6 +28,7 @@ export default function NewDrawingPage() {
       setDrawingNumber('')
     }
   }
+  const [revisionNumber, setRevisionNumber] = useState('-')
   const [boxUrl, setBoxUrl] = useState('')
   const [checklistFile, setChecklistFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
@@ -117,7 +118,7 @@ export default function NewDrawingPage() {
       .from('revisions')
       .insert({
         drawing_id: drawing.id,
-        revision_number: '-',
+        revision_number: revisionNumber.trim() || '-',
         box_url: boxUrl.trim(),
         uploaded_by: user.id,
         status: 'draft',
@@ -183,20 +184,20 @@ export default function NewDrawingPage() {
             />
           </div>
 
-          {/* Initial revision — locked to "-" (émission initiale) */}
+          {/* Revision number */}
           <div>
-            <label className="form-label">Version</label>
-            <div className="mt-1 flex items-center gap-3">
-              <input
-                type="text"
-                value="—"
-                disabled
-                className="form-input font-mono w-20 bg-gray-50 text-gray-500 cursor-not-allowed"
-              />
-              <p className="text-sm text-gray-500">
-                Émission initiale — la version &ldquo;—&rdquo; est attribuée automatiquement.
-              </p>
-            </div>
+            <label className="form-label">Révision *</label>
+            <input
+              type="text"
+              value={revisionNumber}
+              onChange={(e) => setRevisionNumber(e.target.value.toUpperCase())}
+              className="form-input mt-1 font-mono w-28"
+              placeholder="-"
+              required
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Émission initiale : <code className="bg-gray-100 px-1 rounded">-</code> · Sinon : A, B, C…
+            </p>
           </div>
 
           {/* Box URL */}
