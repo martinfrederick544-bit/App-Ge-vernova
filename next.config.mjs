@@ -5,6 +5,14 @@ const nextConfig = {
       allowedOrigins: ['localhost:3000'],
     },
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'assets.cdn.filesafe.space',
+      },
+    ],
+  },
 }
 
 export default nextConfig

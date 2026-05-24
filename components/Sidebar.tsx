@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import type { Profile } from '@/types/database'
 import clsx from 'clsx'
 
@@ -62,16 +63,20 @@ export default function Sidebar({
 
   return (
     <aside className="fixed inset-y-0 left-0 z-50 w-64 flex flex-col bg-white border-r border-gray-200 shadow-sm">
-      {/* Logo GE Vernova */}
-      <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100"
-        style={{ background: 'linear-gradient(135deg, #005E60 0%, #003d3f 100%)' }}>
-        <div className="shrink-0">
-          <svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="24" cy="24" r="22" stroke="white" strokeWidth="2" fill="rgba(255,255,255,0.1)" />
-            <text x="24" y="30" textAnchor="middle" fontSize="17" fontWeight="700"
-              fontFamily="Inter, sans-serif" fill="white" letterSpacing="-1">GE</text>
-            <path d="M 12 36 Q 24 41 36 36" stroke="white" strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.5" />
-          </svg>
+
+      {/* Header — GE Vernova logo */}
+      <div
+        className="flex items-center gap-3 px-5 py-4 border-b border-white/10"
+        style={{ background: 'linear-gradient(135deg, #005E60 0%, #003d3f 100%)' }}
+      >
+        <div className="bg-white rounded-xl p-1.5 shadow-sm shrink-0">
+          <Image
+            src="/ge-vernova-logo.png"
+            alt="GE Vernova"
+            width={32}
+            height={32}
+            className="block"
+          />
         </div>
         <div className="min-w-0">
           <p className="text-sm font-bold text-white tracking-wide">GE Vernova</p>
@@ -111,7 +116,7 @@ export default function Sidebar({
         })}
       </nav>
 
-      {/* User info */}
+      {/* User info + sign out */}
       <div className="px-3 py-3 border-t border-gray-100">
         <div className="flex items-center gap-3 px-3 py-2 mb-1 rounded-lg bg-gray-50">
           <div
