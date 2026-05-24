@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Vous ne pouvez soumettre que vos propres révisions.' }, { status: 403 })
   }
 
-  const { error: updateError } = await supabase
+  const { error: updateError } = await serviceClient
     .from('revisions')
     .update({ status: 'pending_review' })
     .eq('id', revisionId)

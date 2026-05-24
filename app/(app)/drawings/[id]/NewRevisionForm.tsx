@@ -83,7 +83,7 @@ export default function NewRevisionForm({
             required
           >
             {['-', 'A', 'B', 'C', 'D', 'E', 'F', 'G'].map((r) => (
-              <option key={r} value={r}>{r === '-' ? '- (initiale)' : r}</option>
+              <option key={r} value={r}>{r}</option>
             ))}
           </select>
         </div>

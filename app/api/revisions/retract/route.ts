@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { logAudit } from '@/lib/audit'
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
+  const serviceClient = createServiceClient()
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Non authentifié.' }, { status: 401 })
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Vous ne pouvez retirer que vos propres révisions.' }, { status: 403 })
   }
 
-  const { error: updateError } = await supabase
+  const { error: updateError } = await serviceClient
     .from('revisions')
     .update({ status: 'draft' })
     .eq('id', revisionId)
