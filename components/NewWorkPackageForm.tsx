@@ -56,9 +56,9 @@ export default function NewWorkPackageForm({ projectId }: { projectId: string })
       <input
         type="text"
         value={name}
-        onChange={(e) => setName(e.target.value)}
-        className="form-input text-sm py-1.5"
-        placeholder="ex. Structure civile"
+        onChange={(e) => setName(e.target.value.toUpperCase())}
+        className="form-input text-sm py-1.5 uppercase"
+        placeholder="ex. STRUCTURE CIVILE"
         autoFocus
         required
       />

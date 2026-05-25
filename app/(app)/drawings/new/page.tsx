@@ -110,29 +110,28 @@ export default function NewDrawingPage() {
       return
     }
 
-    if (!checklistFile) {
-      setError('La checklist de vérification (PDF) est obligatoire.')
-      return
-    }
-
     setLoading(true)
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setError('Non authentifié.'); setLoading(false); return }
 
-    // Upload checklist PDF
-    const fileName = `${user.id}/${Date.now()}_${checklistFile.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('checklists')
-      .upload(fileName, checklistFile, { contentType: 'application/pdf' })
+    // Upload checklist PDF (optional)
+    let checklistPublicUrl: string | null = null
+    if (checklistFile) {
+      const fileName = `${user.id}/${Date.now()}_${checklistFile.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('checklists')
+        .upload(fileName, checklistFile, { contentType: 'application/pdf' })
 
-    if (uploadError || !uploadData) {
-      setError("Erreur lors de l'envoi de la checklist.")
-      setLoading(false)
-      return
+      if (uploadError || !uploadData) {
+        setError("Erreur lors de l'envoi de la checklist.")
+        setLoading(false)
+        return
+      }
+
+      const { data: { publicUrl } } = supabase.storage.from('checklists').getPublicUrl(uploadData.path)
+      checklistPublicUrl = publicUrl
     }
-
-    const { data: { publicUrl } } = supabase.storage.from('checklists').getPublicUrl(uploadData.path)
 
     // Create drawing
     const { data: drawing, error: drawingError } = await supabase
@@ -144,7 +143,7 @@ export default function NewDrawingPage() {
         title: drawingNumber.trim(),
         created_by: user.id,
         current_revision_id: null,
-        checklist_url: publicUrl,
+        checklist_url: checklistPublicUrl,
       })
       .select()
       .single()
@@ -233,9 +232,9 @@ export default function NewDrawingPage() {
                 <input
                   type="text"
                   value={newWpName}
-                  onChange={(e) => setNewWpName(e.target.value)}
-                  className="form-input text-sm py-1.5 flex-1"
-                  placeholder="Ou créer un nouveau : ex. Structure civile"
+                  onChange={(e) => setNewWpName(e.target.value.toUpperCase())}
+                  className="form-input text-sm py-1.5 flex-1 uppercase"
+                  placeholder="Ou créer un nouveau : ex. STRUCTURE CIVILE"
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleCreateWp() } }}
                 />
                 <button
@@ -286,9 +285,9 @@ export default function NewDrawingPage() {
             </div>
           </div>
 
-          {/* Checklist PDF */}
+          {/* Checklist PDF (optional) */}
           <div>
-            <label className="form-label">Checklist de vérification (PDF) *</label>
+            <label className="form-label">Checklist de vérification (PDF)</label>
             <div className="mt-1">
               <PdfUpload value={checklistFile} onChange={setChecklistFile} />
             </div>

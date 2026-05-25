@@ -215,8 +215,8 @@ export default function EditDrawingPage() {
                 <input
                   type="text"
                   value={newWpName}
-                  onChange={(e) => setNewWpName(e.target.value)}
-                  className="form-input text-sm py-1.5 flex-1"
+                  onChange={(e) => setNewWpName(e.target.value.toUpperCase())}
+                  className="form-input text-sm py-1.5 flex-1 uppercase"
                   placeholder="Ou créer un nouveau WP"
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleCreateWp() } }}
                 />

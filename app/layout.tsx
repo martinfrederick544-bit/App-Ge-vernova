@@ -4,6 +4,10 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'GE Vernova — Gestion des Dessins',
   description: 'Plateforme de gestion des échanges de dessins techniques PDF',
+  icons: {
+    icon: '/favicon.png',
+    apple: '/favicon.png',
+  },
 }
 
 export default function RootLayout({
