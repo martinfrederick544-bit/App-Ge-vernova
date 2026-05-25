@@ -5,7 +5,8 @@ const ALLOWED_BOX_DOMAINS = [
 ]
 
 export function isValidBoxUrl(url: string): boolean {
-  return ALLOWED_BOX_DOMAINS.some((domain) => url.startsWith(domain))
+  const normalized = url.endsWith('/') ? url : url + '/'
+  return ALLOWED_BOX_DOMAINS.some((domain) => normalized.startsWith(domain))
 }
 
 export function assertValidBoxUrl(url: string): void {
