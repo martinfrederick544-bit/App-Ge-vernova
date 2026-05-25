@@ -135,19 +135,23 @@ export default function EditDrawingPage() {
       newChecklistUrl = publicUrl
     }
 
-    // Update drawing
-    const { error: drawingError } = await supabase
-      .from('drawings')
-      .update({
-        drawing_number: drawingNumber.trim(),
-        title: drawingNumber.trim(),
-        project_id: projectId,
-        work_package_id: workPackageId || null,
-        checklist_url: newChecklistUrl,
-      })
-      .eq('id', id)
-
-    if (drawingError) { setError("Erreur lors de la mise à jour du dessin."); setLoading(false); return }
+    // Update drawing via API (uses serviceClient server-side, bypasses RLS/schema cache)
+    const drawingRes = await fetch(`/api/drawings/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        drawingNumber: drawingNumber.trim(),
+        projectId,
+        workPackageId: workPackageId || null,
+        checklistUrl: newChecklistUrl,
+      }),
+    })
+    if (!drawingRes.ok) {
+      const d = await drawingRes.json()
+      setError(d.error ?? "Erreur lors de la mise à jour du dessin.")
+      setLoading(false)
+      return
+    }
 
     // Update revision via API
     if (revisionId) {
