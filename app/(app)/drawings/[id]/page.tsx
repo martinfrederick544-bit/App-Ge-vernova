@@ -75,6 +75,7 @@ export default async function DrawingPage({
     latestRevision?.reviewed_by === user.id &&
     (latestRevision?.status === 'approved' || latestRevision?.status === 'returned')
   const isOwner = profile.role === 'drafter' && drawing.created_by === user.id
+  const hasNoRevisions = isOwner && revisions.length === 0
   const canSubmitDraft = isOwner && latestRevision?.status === 'draft'
   const canRetract =
     isOwner &&
@@ -180,6 +181,14 @@ export default async function DrawingPage({
             )}
           </div>
         </div>
+      )}
+
+      {/* Drafter: drawing with no revisions — show delete only */}
+      {hasNoRevisions && (
+        <DrafterRevisionActions
+          drawingId={params.id}
+          mode="no-revision"
+        />
       )}
 
       {/* Drafter: submit draft to engineer */}

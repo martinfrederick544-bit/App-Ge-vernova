@@ -8,10 +8,10 @@ export default function DrafterRevisionActions({
   drawingId,
   mode,
 }: {
-  revisionId: string
+  revisionId?: string
   drawingId: string
-  /** 'submit' = draft ready to send | 'retract' = sent but not yet reviewed */
-  mode: 'submit' | 'retract'
+  /** 'submit' = draft ready to send | 'retract' = sent but not yet reviewed | 'no-revision' = drawing with no revisions */
+  mode: 'submit' | 'retract' | 'no-revision'
 }) {
   const router = useRouter()
   const [loading, setLoading] = useState<'submit' | 'retract' | 'delete' | null>(null)
@@ -68,6 +68,13 @@ export default function DrafterRevisionActions({
 
   return (
     <div className="space-y-3">
+      {/* No revision info banner */}
+      {mode === 'no-revision' && (
+        <div className="card border-gray-200 bg-gray-50">
+          <p className="text-sm text-gray-500">Ce dessin n&apos;a aucune révision. Vous pouvez le supprimer.</p>
+        </div>
+      )}
+
       {/* Submit banner */}
       {mode === 'submit' && (
         <div className="card border-gev-200 bg-gev-50">
@@ -95,7 +102,7 @@ export default function DrafterRevisionActions({
         {error && <p className="text-sm text-red-600 w-full text-right">{error}</p>}
 
         {/* Modifier (pending) = retract then navigate to edit page */}
-        {mode === 'retract' && (
+        {mode === 'retract' && revisionId && (
           <button
             onClick={handleRetractAndEdit}
             disabled={loading !== null}
@@ -109,7 +116,7 @@ export default function DrafterRevisionActions({
         )}
 
         {/* Modifier in draft mode = go directly to edit page */}
-        {mode === 'submit' && (
+        {mode === 'submit' && revisionId && (
           <button
             onClick={() => router.push(`/drawings/${drawingId}/edit`)}
             disabled={loading !== null}
