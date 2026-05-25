@@ -106,7 +106,7 @@ export default function NewDrawingPage() {
     setError(null)
 
     if (!isValidBoxUrl(boxUrl)) {
-      setError('Le lien Box du dessin est invalide. Il doit commencer par https://gehealthcare.box.com/ ou https://app.box.com/')
+      setError('Le lien Box est invalide. Il doit commencer par https://gevernova.box.com/')
       return
     }
 
