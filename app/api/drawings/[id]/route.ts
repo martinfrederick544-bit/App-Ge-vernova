@@ -67,8 +67,8 @@ export async function DELETE(
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'drafter') {
-    return NextResponse.json({ error: 'Seul un dessinateur peut supprimer un dessin.' }, { status: 403 })
+  if (profile?.role !== 'drafter' && profile?.role !== 'project_manager') {
+    return NextResponse.json({ error: 'Vous n\'avez pas la permission de supprimer un dessin.' }, { status: 403 })
   }
 
   const { data: drawing } = await supabase
@@ -78,7 +78,8 @@ export async function DELETE(
     .single()
 
   if (!drawing) return NextResponse.json({ error: 'Dessin introuvable.' }, { status: 404 })
-  if (drawing.created_by !== user.id) {
+
+  if (profile?.role === 'drafter' && drawing.created_by !== user.id) {
     return NextResponse.json({ error: 'Vous ne pouvez supprimer que vos propres dessins.' }, { status: 403 })
   }
 

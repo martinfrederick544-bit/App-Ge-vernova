@@ -75,7 +75,8 @@ export default async function DrawingPage({
     latestRevision?.reviewed_by === user.id &&
     (latestRevision?.status === 'approved' || latestRevision?.status === 'returned')
   const isOwner = profile.role === 'drafter' && drawing.created_by === user.id
-  const hasNoRevisions = isOwner && revisions.length === 0
+  const isManager = profile.role === 'project_manager'
+  const hasNoRevisions = (isOwner || isManager) && revisions.length === 0
   const canSubmitDraft = isOwner && latestRevision?.status === 'draft'
   const canRetract =
     isOwner &&
