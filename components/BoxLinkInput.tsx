@@ -32,7 +32,7 @@ export default function BoxLinkInput({
           onChange={(e) => onChange(e.target.value)}
           onBlur={() => setTouched(true)}
           required={required}
-          placeholder="https://gehealthcare.box.com/s/..."
+          placeholder="https://gevernova.box.com/s/..."
           className={clsx(
             'form-input pr-9',
             showError && 'ring-red-500 focus:ring-red-500',
@@ -57,6 +57,7 @@ export default function BoxLinkInput({
       {showError && (
         <p className="mt-1 text-xs text-red-600">
           Le lien doit commencer par{' '}
+          <code className="font-mono">https://gevernova.box.com/</code>,{' '}
           <code className="font-mono">https://gehealthcare.box.com/</code> ou{' '}
           <code className="font-mono">https://app.box.com/</code>
         </p>

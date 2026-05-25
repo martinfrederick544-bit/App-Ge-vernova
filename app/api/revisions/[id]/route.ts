@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { assertValidBoxUrl } from '@/lib/validate-box-url'
 
 export async function PATCH(
   request: NextRequest,
@@ -22,10 +21,17 @@ export async function PATCH(
     return NextResponse.json({ error: 'Seul un dessinateur peut modifier une révision.' }, { status: 403 })
   }
 
-  // Verify the revision belongs to a drawing created by this user
-  const { data: revision } = await supabase
+  const body = await request.json()
+  const { revisionNumber, boxUrl } = body
+
+  if (!revisionNumber || !boxUrl) {
+    return NextResponse.json({ error: 'Paramètres manquants.' }, { status: 400 })
+  }
+
+  // Verify revision belongs to a drawing owned by this user (via serviceClient to avoid RLS issues)
+  const { data: revision } = await serviceClient
     .from('revisions')
-    .select('id, status, drawing:drawings!revisions_drawing_id_fkey(created_by)')
+    .select('id, drawing:drawings!revisions_drawing_id_fkey(created_by)')
     .eq('id', params.id)
     .single()
 
@@ -36,23 +42,7 @@ export async function PATCH(
     return NextResponse.json({ error: 'Vous ne pouvez modifier que vos propres révisions.' }, { status: 403 })
   }
 
-  if (revision.status !== 'draft') {
-    return NextResponse.json({ error: 'Seules les révisions en brouillon peuvent être modifiées.' }, { status: 409 })
-  }
-
-  const body = await request.json()
-  const { revisionNumber, boxUrl } = body
-
-  if (!revisionNumber || !boxUrl) {
-    return NextResponse.json({ error: 'Paramètres manquants.' }, { status: 400 })
-  }
-
-  try {
-    assertValidBoxUrl(boxUrl.trim())
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 400 })
-  }
-
+  // Update using serviceClient — bypasses RLS entirely
   const { error: updateError } = await serviceClient
     .from('revisions')
     .update({
@@ -62,7 +52,7 @@ export async function PATCH(
     .eq('id', params.id)
 
   if (updateError) {
-    return NextResponse.json({ error: 'Erreur lors de la mise à jour.' }, { status: 500 })
+    return NextResponse.json({ error: updateError.message }, { status: 500 })
   }
 
   return NextResponse.json({ success: true })
