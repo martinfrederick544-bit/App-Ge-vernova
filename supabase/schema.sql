@@ -73,7 +73,8 @@ create table revisions (
   ),
   -- Validation de l'URL Box (backup côté DB)
   constraint valid_box_url check (
-    box_url like 'https://gehealthcare.box.com/%'
+    box_url like 'https://gevernova.box.com/%'
+    or box_url like 'https://gehealthcare.box.com/%'
     or box_url like 'https://app.box.com/%'
   )
 );
