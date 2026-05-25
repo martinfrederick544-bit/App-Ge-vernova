@@ -234,7 +234,7 @@ export default function NewDrawingPage() {
                   value={newWpName}
                   onChange={(e) => setNewWpName(e.target.value.toUpperCase())}
                   className="form-input text-sm py-1.5 flex-1 uppercase"
-                  placeholder="Ou créer un nouveau : ex. STRUCTURE CIVILE"
+                  placeholder="Ou créer un nouveau : ex. MKB28"
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleCreateWp() } }}
                 />
                 <button
