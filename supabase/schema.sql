@@ -67,6 +67,7 @@ create table revisions (
   reviewed_by      uuid references profiles(id),
   reviewed_at      timestamptz,
   review_comment   text,
+  review_box_url   text,
   -- Un retour exige un commentaire
   constraint returned_requires_comment check (
     status != 'returned' or (review_comment is not null and trim(review_comment) != '')
@@ -76,6 +77,12 @@ create table revisions (
     box_url like 'https://gevernova.box.com/%'
     or box_url like 'https://gehealthcare.box.com/%'
     or box_url like 'https://app.box.com/%'
+  ),
+  constraint valid_review_box_url check (
+    review_box_url is null
+    or review_box_url like 'https://gevernova.box.com/%'
+    or review_box_url like 'https://gehealthcare.box.com/%'
+    or review_box_url like 'https://app.box.com/%'
   )
 );
 

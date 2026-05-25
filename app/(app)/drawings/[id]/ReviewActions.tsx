@@ -33,7 +33,7 @@ export default function ReviewActions({
     }
 
     if (action === 'return' && !isValidBoxUrl(reviewBoxUrl.trim())) {
-      setError('Le lien Box est invalide. Il doit commencer par https://gehealthcare.box.com/ ou https://app.box.com/')
+      setError('Le lien Box est invalide. Il doit commencer par https://gevernova.box.com/, https://gehealthcare.box.com/ ou https://app.box.com/')
       return
     }
 
